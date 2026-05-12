@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Log2SQL</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="hero">
+        <div>
+          <p class="eyebrow">Desktop Log Explorer</p>
+          <h1>Log2SQL</h1>
+          <p class="hero-copy">Browse imported log rows, pivot on parsed fields, and run read-only SQL directly against SQLite.</p>
+          <div class="current-db hidden" id="current-db"></div>
+        </div>
+        <div class="hero-side">
+          <div class="hero-actions">
+            <button id="change-db-button" class="secondary hidden" type="button">Change DB</button>
+            <button id="back-to-explorer-button" class="secondary hidden" type="button">Back To Explorer</button>
+          </div>
+        </div>
+      </header>
+
+      <section class="panel active" id="home-panel">
+        <div class="home-grid">
+          <div class="home-card">
+            <h2>Import Log File</h2>
+            <p class="hint">Upload a CSV or plain-text log file and store the results in a managed SQLite database.</p>
+            <form id="upload-form" class="stack-form">
+              <label class="field">
+                <span>Log file</span>
+                <input id="upload-file" name="file" type="file" required />
+              </label>
+              <label class="field">
+                <span>Database name</span>
+                <input id="db-name" name="db_name" type="text" placeholder="example: production-errors" required />
+              </label>
+              <div class="warning-box hidden" id="db-warning"></div>
+              <label class="field small">
+                <span>Format</span>
+                <select id="upload-format" name="format">
+                  <option value="auto" selected>auto</option>
+                  <option value="csv">csv</option>
+                  <option value="plain">plain</option>
+                </select>
+              </label>
+              <p class="path-preview" id="db-preview"></p>
+              <button id="upload-submit" type="submit">Import And Open</button>
+              <div class="status-text" id="upload-status"></div>
+            </form>
+          </div>
+
+          <div class="home-card">
+            <h2>Open Existing DB</h2>
+            <p class="hint">Open a known managed database or type the path to any existing SQLite file.</p>
+            <div class="stack-form">
+              <label class="field">
+                <span>Known databases</span>
+                <select id="managed-db-select">
+                  <option value="">Select a database</option>
+                </select>
+              </label>
+              <button id="open-managed-db" type="button">Open Selected DB</button>
+              <label class="field">
+                <span>Manual SQLite path</span>
+                <input id="manual-db-path" type="text" placeholder="./logs.sqlite" />
+              </label>
+              <button id="open-manual-db" type="button" class="secondary">Open Manual Path</button>
+              <div class="status-text" id="open-db-status"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <nav class="tabs hidden" id="app-tabs">
+        <button class="tab active" data-tab="explorer">Data Explorer</button>
+        <button class="tab" data-tab="sql">SQL Lab</button>
+      </nav>
+
+      <main>
+        <section class="panel" id="tab-explorer" data-app-panel="true">
+          <div class="toolbar">
+            <label class="field">
+              <span>Search</span>
+              <input id="search-input" type="search" placeholder="Search across parsed fields" />
+            </label>
+            <label class="field">
+              <span>File</span>
+              <select id="filename-filter">
+                <option value="">All files</option>
+              </select>
+            </label>
+            <label class="field small">
+              <span>Page size</span>
+              <select id="page-size">
+                <option>25</option>
+                <option selected>50</option>
+                <option>100</option>
+                <option>250</option>
+              </select>
+            </label>
+            <button id="refresh-table" class="secondary">Refresh</button>
+          </div>
+
+          <div class="column-picker">
+            <div class="column-picker-header">
+              <strong>Visible Columns</strong>
+              <button id="reset-columns" class="secondary small-button">Reset</button>
+            </div>
+            <div id="column-options" class="column-options"></div>
+          </div>
+
+          <div class="table-wrap">
+            <table id="logs-table">
+              <thead></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+
+          <div class="pager">
+            <button id="prev-page" class="secondary">Previous</button>
+            <span id="page-status">Page 1</span>
+            <button id="next-page" class="secondary">Next</button>
+          </div>
+        </section>
+
+        <section class="panel" id="tab-sql" data-app-panel="true">
+          <div class="sql-toolbar">
+            <div class="field sql-field">
+              <span>Read-only SQL</span>
+              <p class="hint">Allowed statements: <code>SELECT</code>, <code>WITH</code>, <code>EXPLAIN</code>. Use <code>Enter</code> to accept a suggestion and <code>Shift+Enter</code> for a new line.</p>
+            </div>
+            <button id="run-sql">Run Query</button>
+          </div>
+
+          <details class="sql-help" id="sql-help-panel">
+            <summary class="sql-help-summary">SQL Help: tables and columns</summary>
+            <div class="sql-help-body" id="sql-help"></div>
+          </details>
+
+          <div class="editor-shell">
+            <div class="editor-wrap">
+              <div id="sql-editor"></div>
+            </div>
+          </div>
+
+          <div class="sql-meta" id="sql-meta"></div>
+          <div class="table-wrap">
+            <table id="sql-results">
+              <thead></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div class="pager sql-pager">
+            <label class="field small">
+              <span>Page size</span>
+              <select id="sql-page-size">
+                <option>25</option>
+                <option selected>50</option>
+                <option>100</option>
+                <option>250</option>
+              </select>
+            </label>
+            <button id="sql-prev-page" class="secondary">Previous</button>
+            <span id="sql-page-status">Page 1</span>
+            <button id="sql-next-page" class="secondary">Next</button>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script src="/static/sql-editor.bundle.js"></script>
+    <script src="/static/app.js"></script>
+  </body>
+</html>

@@ -1,0 +1,6 @@
+/node_modules/
+/log2sql-data/
+/.idea/
+*.iml
+.DS_Store
+/dist/
